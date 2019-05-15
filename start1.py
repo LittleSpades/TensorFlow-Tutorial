@@ -1,127 +1,124 @@
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 
-# TensorFlow e tf.keras
+
+import ExploreTheData as etd
+import DataExamples as dtex
+import tfmodel as md
+
+# TensorFlow and tf.keras
 import tensorflow as tf
 from tensorflow import keras
 
-# Bibliotecas de ajuda
+# Libraries
 import numpy as np
+from prettytable import PrettyTable
+import os
+import time
 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
+################################ Init #################################
+
 print(tf.__version__)
+
+ex = 0
 
 fashion_mnist = keras.datasets.fashion_mnist
 
 (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
 
-#9 types of clothing
+# 10 types of clothing
 class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
-
-################################ Train ################################
-print("Quantity of train images, size (px) = ", train_images.shape)
-
-print("Quantity of train images: ",len(train_labels))
-
-print("Training Vector: ",train_labels, "\n")
 #######################################################################
 
-################################ Test #################################
-print("Quantity of test images, size (px) = ", test_images.shape)
+while ex==0:
 
-print("Quantity of test images: ",len(test_labels))
-#######################################################################
+  import subprocess as sp
+  tmp = sp.call('clear',shell=True)
 
-######################### Pre-Processing Data #########################
-plt.figure()
-plt.imshow(train_images[0]) #Train Image 1
-plt.colorbar()  
-plt.grid(False)
-plt.savefig('Pre-Processed Data Test.png')
+  
+  
+  print("TensorFlow Tutorial\n\n")
+  print("1 - Explore the Data")
+  print("2 - PreProcess Data and Training Data Example")
+  print("3 - Model Setup")
+  print("4 - Model Training")
+  print("5 - Accuracy")
+  print("6 - Predictions")
+  print("7 - Exit")
 
-#The values must be in a range of 0 to 1 before feeding to the neural network model
-train_images = train_images / 255.0
-test_images = test_images / 255.0
-#######################################################################
+  while True:
+    try:
+      response = int(raw_input("What do you want to do (1-6)? "))
+      break
+    except ValueError:
+      print('Oops!  That was no valid number.  Try again...')
 
+  if response == 1 :
+    tmp = sp.call('clear',shell=True)
+    etd.explore(train_images, train_labels, test_images, test_labels)  
+  elif response == 2 :
+    tmp = sp.call('clear',shell=True)
+    train_images, test_images = dtex.preprocessdata(train_images, train_labels, test_images, class_names)
+  elif response == 3 :
+    tmp = sp.call('clear',shell=True)
+    model = md.modelSetup(train_images, train_labels)  
+  elif response == 4 :
+    try:
+      model
+    except NameError:
+      print("\nYou need to setup the model!")
+      time.sleep(2)
+    else:
+      tmp = sp.call('clear',shell=True)
+      model = md.modelTraining(model, train_images, train_labels)
+  elif response == 5 :
+    try:
+      model
+    except NameError:
+      print("\nYou need to setup the model!")
+      time.sleep(2)
+    else:
+      tmp = sp.call('clear',shell=True)
+      md.aculoss(model, train_images, train_labels, test_images, test_labels)
+  elif response == 6 :
+    try:
+      model
+    except NameError:
+      print("\nYou need to setup the model!")
+      time.sleep(2)
+    else:
+      tmp = sp.call('clear',shell=True)
+      md.predictions(model, test_images, class_names, test_labels)
+  elif response == 7 :
+    ex = 1
+    exit()
+  else:
+    print("ERROR!")
+    time.sleep(2)
 
-####################### Training Data Example #########################
-plt.figure(figsize=(10,10))
-
-for i in range(25):
-
-    plt.subplot(5,5,i+1)
-    plt.xticks([])
-    plt.yticks([])
-    plt.grid(False)
-    plt.imshow(train_images[i], cmap=plt.cm.binary)
-    plt.xlabel(class_names[train_labels[i]])
-
-plt.savefig('Training Data Example.png')
-#######################################################################
-
-############################ Model SetUp ##############################
-model = keras.Sequential([
-    keras.layers.Flatten(input_shape=(28, 28)),
-    keras.layers.Dense(128, activation=tf.nn.relu),
-    keras.layers.Dense(10, activation=tf.nn.softmax)
-])
-
-model.compile(optimizer='adam', 
-              loss='sparse_categorical_crossentropy',
-              metrics=['accuracy'])
-
-# OPTIMIZER: How the model is updated based on the data it sees and its 
-#            loss function.
+# @title MIT License
 #
-# LOSS FUNCTION: Measures how accurate the model is during training.
-#                We want to minimize this function to "steer" the model 
-#                in the right direction.
+# Copyright (c) 2017 Francois Chollet
 #
-# METRICS: Monitors the training and testing steps. 
-#          -> 'accuracy': The fraction of the images that are correctly 
-#                         classified.
-#######################################################################
-
-
-############################# Training ################################
-
-# This method is "fit" tothe training data
-print('\n\nTraining...\n')
-model.fit(train_images, train_labels, epochs=5)
-
-print('\nComputing Loss/Accuracy Values...\n')
-# Loss and Accuracy of the trained model on itself
-train_loss, train_acc = model.evaluate(train_images, train_labels)
-# Loss and Accuracy of the trained model on the test dataset
-test_loss, test_acc = model.evaluate(test_images, test_labels)
-
-#Print Accuracy Values
-print('\nTraining Accuracy:', train_acc, '\nTest Accuracy:', test_acc, '\n\n')
-# Test Accuracy < Training Accuracy <= OVERFITTING
-#######################################################################
-
-########################### Predictions ###############################
-
-# Matrix in witch each column have the probabilities for each class of a test
-# (#Lines X #Columns) = (#Classes X #Tests)
-predictions = model.predict(test_images)
-
-
-print('Class Probabilities for the first Prediction:')
-
-from prettytable import PrettyTable
-t = PrettyTable(['Class', 'Prob'])
-
-for i in range(10):
-    t.add_row([class_names[i], predictions[0][i]])
-print(t)
-
-print('\n => The Trained Model Predicts that the class of the first Test is'
-    ,np.argmax(predictions[0]),'!')
-#######################################################################
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
