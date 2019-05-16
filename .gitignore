@@ -2,3 +2,7 @@ Pre-Processed Data Test.png
 Pre-Processed Training Data.png
 SetOfPredictions.png
 Training Data Set Example.png
+bin/
+include/
+lib/
+local/
